@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combined Charts</title>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+    }
+    .chart-container {
+      width: 90%;
+      max-width: 1000px;
+      margin: 20px auto;  
+      text-align: center;
+    }
+    #stacked-area-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 1000px;
+      margin: 20px auto;
+      gap: 20px; /* Add space between the chart and dropdown */
+    }
+    #year-select-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .chart-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Title and Container for the Stacked Area Chart with Dropdown on the Right -->
+  <div class="chart-container">
+    <div class="chart-title">Monthly Domestic Day Trips</div>
+    <div id="stacked-area-container">
+      <div id="stacked-area-chart"></div>
+      <div id="year-select-container">
+        <label for="year-select">Select Year: </label>
+        <select id="year-select">
+          <option value="all">-select-</option>
+          <option value="2019">2019</option>
+          <option value="2022">2022</option>
+          <option value="2023">2023</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title and Container for the Pie Chart -->
+  <div class="chart-container">
+    <div class="chart-title">Reasons to Visit Australia in 2023</div>
+    <div id="pie-chart"></div>
+  </div>
+
+  <script type="text/javascript">
+    // Spec for the stacked area chart
+    var spec1 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": {
+        "url": "./StackedAreaChart.csv",
+        "format": {"type": "csv"}
+      },
+      "mark": "area",
+      "encoding": {
+        "x": {
+          "field": "Month",
+          "type": "ordinal",
+          "title": "Month",
+          "sort": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+        },
+        "y": {
+          "field": "Trips",
+          "type": "quantitative",
+          "title": "Number of Trips",
+          "axis": {"format": "s"}
+        },
+        "color": {
+          "field": "Year",
+          "type": "nominal",
+          "title": "Year"
+        },
+        "tooltip": [
+          {"field": "Year", "type": "nominal", "title": "Year"},
+          {"field": "Month", "type": "ordinal", "title": "Month"},
+          {"field": "Trips", "type": "quantitative", "title": "Trips", "format": ","}
+        ]
+      }
+    };
+
+    // Function to update the Stacked Area Chart based on year selection
+    function updateChart(year) {
+      let updatedSpec = JSON.parse(JSON.stringify(spec1));
+
+      // Apply filtering by year
+      if (year !== 'all') {
+        updatedSpec.transform = [
+          {"filter": `datum.Year == '${year}'`}
+        ];
+      }
+
+      vegaEmbed('#stacked-area-chart', updatedSpec);
+    }
+
+    // Initial chart load with all years
+    updateChart('all');
+
+    // Add event listener to dropdown for year selection
+    document.getElementById('year-select').addEventListener('change', function() {
+      var selectedYear = this.value;
+      updateChart(selectedYear);
+    });
+
+    // Spec for the pie chart
+    var spec2 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": {
+        "url": "./Piechart.csv",
+        "format": {"type": "csv"}
+      },
+      "mark": "arc",
+      "encoding": {
+        "theta": {"field": "Value", "type": "quantitative"},
+        "color": {"field": "Category", "type": "nominal", "title": "Travel Type"},
+        "tooltip": [
+          {"field": "Category", "type": "nominal", "title": "Category"},
+          {"field": "Value", "type": "quantitative", "title": "Number of Travelers", "format": ","}
+        ]
+      }
+    };
+
+    // Embed the pie chart
+    vegaEmbed('#pie-chart', spec2);
+  </script>
+
+</body>
+</html>
